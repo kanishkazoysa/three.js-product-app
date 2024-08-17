@@ -1,0 +1,9 @@
+# Node.js
+node_modules/
+
+# Express
+.env
+
+# Three.js
+build/
+dist/
