@@ -19,7 +19,7 @@ import {
 const Customizer = () => {
   const snap = useSnapshot(state);
   const [file, setFile] = useState("");
-  const [promt, setPromt] = useState("");
+  const [prompt, setPrompt] = useState("");
   const [generatingImg, setGeneratingImg] = useState(false);
 
   const [activeEditorTab, setActiveEditorTab] = useState("");
@@ -38,8 +38,8 @@ const Customizer = () => {
       case "aipicker":
         return (
           <AIPicker
-            prompt={promt}
-            setPromt={setPromt}
+            prompt={prompt}
+            setPrompt={setPrompt}
             generatingImg={generatingImg}
             handleSubmit={handleSubmit}
           />
@@ -49,13 +49,33 @@ const Customizer = () => {
     }
   };
 
-  const handleSubmit = async ({ type }) => {
-    if (!promt) return alert("please enter the prompt");
-
+  const handleSubmit = async (type) => {
+    if (!prompt) return alert("Please enter the prompt");
+  
     try {
-      //call our backend to generate an ai image
+      setGeneratingImg(true);
+  
+      const response = await fetch('http://localhost:8080/api/v1/dalle', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt: prompt }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+  
+      if (!data.photo) {
+        throw new Error("No photo returned from the server");
+      }
+  
+      handleDecals(type, `data:image/png;base64,${data.photo}`);
     } catch (error) {
-      alert(error);
+      alert(`Error: ${error.message}`);
     } finally {
       setGeneratingImg(false);
       setActiveEditorTab("");
@@ -64,13 +84,22 @@ const Customizer = () => {
 
   const handleDecals = (type, result) => {
     const decalType = DecalTypes[type];
+    if (!decalType) {
+      console.error(`Invalid decal type: ${type}`);
+      return;
+    }
+  
+    if (!result) {
+      console.error("Invalid result: No image data provided");
+      return;
+    }
+  
     state[decalType.stateProperty] = result;
-
+  
     if (!activeFilterTab[decalType.filterTab]) {
       handleActiveFilterTab(decalType.filterTab);
     }
   };
-
   const handleActiveFilterTab = (tabName) => {
     switch (tabName) {
       case "logoShirt":
