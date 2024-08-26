@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./client  # Path to your frontend directory
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./server  # Path to your backend directory
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
